@@ -120,7 +120,7 @@ module Webrat
       @label_elements = []
 
       parent = @element.parent
-      while parent.respond_to?(:parent)
+      while parent.respond_to?(:parent) && !parent.parent.nil?
         if parent.name == 'label'
           @label_elements.push parent
           break
