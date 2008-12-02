@@ -1,4 +1,5 @@
 require "webrat"
+require "test_help"
 
 module Webrat
   class RailsSession < Session #:nodoc:
