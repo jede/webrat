@@ -4,8 +4,6 @@ require "selenium/client"
 require "webrat/selenium/selenium_session"
 require "webrat/selenium/matchers"
 
-Webrat.configuration.mode = :selenium
-
 module Webrat
   
   def self.with_selenium_server #:nodoc:
@@ -28,8 +26,8 @@ module Webrat
   
   def self.start_app_server #:nodoc:
     pid_file = File.expand_path(RAILS_ROOT + "/tmp/pids/mongrel_selenium.pid")
-    system("mongrel_rails start -d --chdir=#{RAILS_ROOT} --port=3001 --environment=selenium --pid #{pid_file} &")
-    TCPSocket.wait_for_service :host => "0.0.0.0", :port => 3001
+    system("mongrel_rails start -d --chdir=#{RAILS_ROOT} --port=#{Webrat.configuration.selenium_port} --environment=#{Webrat.configuration.selenium_environment} --pid #{pid_file} &")
+    TCPSocket.wait_for_service :host => "0.0.0.0", :port => Webrat.configuration.selenium_port.to_i
   end
   
   def self.stop_app_server #:nodoc:
@@ -40,14 +38,10 @@ module Webrat
   # To use Webrat's Selenium support, you'll need the selenium-client gem installed.
   # Activate it with (for example, in your <tt>env.rb</tt>):
   #
-  #   require "webrat/selenium"
-  # 
-  # Then, if you're using Cucumber, configure it to use a 
-  # <tt>Webrat::Selenium::Rails::World</tt> as the scenario context by adding
-  # the following to <tt>env.rb</tt>:
-  #
-  #   World do
-  #     Webrat::Selenium::Rails::World.new
+  #   require "webrat"
+  #   
+  #   Webrat.configure do |config|
+  #     config.mode = :selenium
   #   end
   #
   # == Dropping down to the selenium-client API
@@ -74,31 +68,26 @@ module Webrat
   # your Webrat::Selenium tests ignoring the concurrency issues that can plague in-browser
   # testing, so long as you're using the Webrat API.
   module Selenium
-    
-    module Rails #:nodoc:
-      class World < ::ActionController::IntegrationTest
-        include Webrat::Selenium::Matchers
-        
-        def initialize #:nodoc:
-          @_result = Test::Unit::TestResult.new
-        end
-        
-        def response
-          webrat_session.response
-        end
-        
-        def wait_for(*args, &block)
-          webrat_session.wait_for(*args, &block)
-        end
-        
+    module Methods
+      def response
+        webrat_session.response
+      end
+
+      def wait_for(*args, &block)
+        webrat_session.wait_for(*args, &block)
+      end
+
+      def save_and_open_screengrab
+        webrat_session.save_and_open_screengrab
       end
     end
   end
-    
 end
 
 module ActionController #:nodoc:
   IntegrationTest.class_eval do
     include Webrat::Methods
+    include Webrat::Selenium::Methods
+    include Webrat::Selenium::Matchers
   end
 end

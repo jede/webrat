@@ -42,11 +42,6 @@ module Webrat
         :params => (data && data.any?) ? data : nil, 
         :headers => headers,
         :method => method)
-      follow_redirect
-    end
-    
-    def follow_redirect
-      self.get(@response.headers['Location'], nil, @response.headers) if @response.status == 302
     end
 
   end
@@ -59,10 +54,6 @@ module Merb #:nodoc:
         @_webrat_session ||= Webrat::MerbSession.new
         @_webrat_session.response = @_webrat_session.request(uri, env)
       end
-  
-      def follow_redirect
-        @_webrat_session.follow_redirect
-      end
     end
   end
 end
@@ -72,6 +63,3 @@ class Merb::Test::RspecStory #:nodoc:
     @browser ||= Webrat::MerbSession.new
   end
 end
-
-Webrat.configuration.mode = :merb
-
